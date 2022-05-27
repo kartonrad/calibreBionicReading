@@ -50,32 +50,38 @@ class DemoTool(Tool):
             value=0.5, min=0.1, max=0.9
         )
         if ok:
-            # Ensure any in progress editing the user is doing is present in the container
-            self.boss.commit_all_editors_to_container()
-            try:
-                self.bolden_words(factor)
-            except Exception:
-                # Something bad happened report the error to the user
-                import traceback
-                error_dialog(self.gui, _('Failed to bolden words'), _(
-                    'Failed to bolden words, click "Show details" for more info'),
-                    det_msg=traceback.format_exc(), show=True)
-                # Revert to the saved restore point
-                self.boss.revert_requested(self.boss.global_undo.previous_container)
-            else:
-                # Show the user what changes we have made, allowing her to
-                # revert them if necessary
-                # no this is slow for giant books
-                # self.boss.show_current_diff()
+            opacity, ok = QInputDialog.getDouble(
+                self.gui, 'Enter opacity of non-bold text', 'Value between 0-1, enter 1 to not change.',
+                value=0.768, min=0.1, max=1.0
+            )
+            if ok:
+
+                # Ensure any in progress editing the user is doing is present in the container
+                self.boss.commit_all_editors_to_container()
+                try:
+                    self.bolden_words(factor, opacity)
+                except Exception:
+                    # Something bad happened report the error to the user
+                    import traceback
+                    error_dialog(self.gui, _('Failed to bolden words'), _(
+                        'Failed to bolden words, click "Show details" for more info'),
+                        det_msg=traceback.format_exc(), show=True)
+                    # Revert to the saved restore point
+                    self.boss.revert_requested(self.boss.global_undo.previous_container)
+                else:
+                    # Show the user what changes we have made, allowing her to
+                    # revert them if necessary
+                    # no this is slow for giant books
+                    # self.boss.show_current_diff()
 
 
-                # Update the editor UI to take into account all the changes we
-                # have made
-                self.boss.apply_container_update_to_gui()
+                    # Update the editor UI to take into account all the changes we
+                    # have made
+                    self.boss.apply_container_update_to_gui()
 
 
 
-    def bolden_words(self, factor):
+    def bolden_words(self, factor, opacity):
         # Magnify all font sizes defined in the book by the specified factor
         # First we create a restore point so that the user can undo all changes
         # we make.
@@ -104,6 +110,10 @@ class DemoTool(Tool):
                     or parentTag == "link"):
                         continue # dont mess with header stuff
 
+                    #block = container.parse_css(elem.get('style'), is_declaration=True)
+                    #style.setProperty('opacity', val)
+                    #elem.set('style', force_unicode(block.getCssText(separator=' '), 'utf-8'))
+
                     nodetext = ""
                     if elem.is_text:
                         nodetext = parent.text
@@ -120,7 +130,19 @@ class DemoTool(Tool):
                         nodetext = nodetext[:w.start(0)]
                         newElem = etree.Element("b")
                         newElem.text = boldtext
-                        newElem.tail = boldtail
+                        
+                        # transparentize
+                        if opacity < 0.98:
+                            tailElem = etree.Element("span")
+                            tailElem.text = boldtail
+                            tailElem.set("style", "opacity: "+str(opacity)+";")
+                            if elem.is_text:
+                                parent.insert(0, tailElem)
+                            elif elem.is_tail:
+                                parent.insert(parent.getparent().index(parent), newElem)
+                        else:
+                            newElem.tail = boldtail
+
 
                         if elem.is_text:
                             parent.text = nodetext

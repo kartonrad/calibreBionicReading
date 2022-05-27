@@ -11,7 +11,7 @@ from calibre.customize import EditBookToolPlugin
 class DemoPlugin(EditBookToolPlugin):
 
     name = 'Bionic-Reading, Edit Plugin'
-    version = (1, 0, 0)
+    version = (1, 1, 0)
     author = 'Bingus'
     supported_platforms = ['windows', 'osx', 'linux']
     description = 'Boldens the start of every word, to create fixation points, to ease reading? Its black magic.'
