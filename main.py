@@ -7,7 +7,6 @@ __copyright__ = '2022, Bingus <bingusBruh>'
 
 import re
 import math
-from time import sleep
 from xml.dom.minidom import Element
 from qt.core import QAction, QInputDialog
 from css_parser.css import CSSRule
@@ -103,10 +102,11 @@ class DemoTool(Tool):
 
                     parent = elem.getparent()
                     #parent.set("taggggg", parent.tag)
-                    # don't ask me wwhy these are namespaced
-                    print( parent.tag )
+                    
+                    #print( parent.tag )
                     if ( parent.tag == etree.Comment ):
                         continue
+                    # don't ask me wwhy these are namespaced
                     parentTag = parent.tag.split("}")[1]
                     if (parentTag == "style" 
                     or parentTag == "title" 
@@ -124,7 +124,7 @@ class DemoTool(Tool):
                     elif elem.is_tail:
                         nodetext = parent.tail
 
-                    print("MATCHED TEXT(): "+nodetext)
+                    #print("MATCHED TEXT(): "+nodetext)
 
                     words = re.finditer(r"[\w]+", nodetext)
 
@@ -160,8 +160,8 @@ class DemoTool(Tool):
                             superparent = parent.getparent();
                             superparent.insert(superparent.index(parent)+1, newElem)
                             parent.tail = nodetext
-                        else:
-                            print("neither tail nor text")
+                        #else:
+                            #print("neither tail nor text")
                     
                 # container.parsed(name).xpath("bingusbingusbingus");
                 container.dirty(name)
