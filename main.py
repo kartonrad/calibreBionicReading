@@ -7,6 +7,7 @@ __copyright__ = '2022, Bingus <bingusBruh>'
 
 import re
 import math
+from time import sleep
 from xml.dom.minidom import Element
 from qt.core import QAction, QInputDialog
 from css_parser.css import CSSRule
@@ -51,7 +52,7 @@ class DemoTool(Tool):
         )
         if ok:
             opacity, ok = QInputDialog.getDouble(
-                self.gui, 'Enter opacity of non-bold text', 'Value between 0-1, enter 1 to not change.',
+                self.gui, 'Enter opacity of non-bold text', 'Opacity Value of the unhighlighted text, between 0-1, enter 1 to not change.',
                 value=0.768, min=0.1, max=1.0
             )
             if ok:
@@ -103,6 +104,9 @@ class DemoTool(Tool):
                     parent = elem.getparent()
                     #parent.set("taggggg", parent.tag)
                     # don't ask me wwhy these are namespaced
+                    print( parent.tag )
+                    if ( parent.tag == etree.Comment ):
+                        continue
                     parentTag = parent.tag.split("}")[1]
                     if (parentTag == "style" 
                     or parentTag == "title" 
@@ -119,6 +123,9 @@ class DemoTool(Tool):
                         nodetext = parent.text
                     elif elem.is_tail:
                         nodetext = parent.tail
+
+                    print("MATCHED TEXT(): "+nodetext)
+
                     words = re.finditer(r"[\w]+", nodetext)
 
                     for w in reversed(list(words)):
@@ -128,6 +135,7 @@ class DemoTool(Tool):
                         boldtext = nodetext[w.start(0):(w.start(0)+boldend)]
                         boldtail = nodetext[(w.start(0)+boldend):]
                         nodetext = nodetext[:w.start(0)]
+                        #print("nodetext: <"+boldtail+"> TAIL: <"+boldtail+"> Remainin: <"+nodetext+">");
                         newElem = etree.Element("b")
                         newElem.text = boldtext
                         
@@ -139,7 +147,8 @@ class DemoTool(Tool):
                             if elem.is_text:
                                 parent.insert(0, tailElem)
                             elif elem.is_tail:
-                                parent.insert(parent.getparent().index(parent), newElem)
+                                superparent = parent.getparent();
+                                superparent.insert(superparent.index(parent)+1, tailElem)
                         else:
                             newElem.tail = boldtail
 
@@ -148,8 +157,11 @@ class DemoTool(Tool):
                             parent.text = nodetext
                             parent.insert(0, newElem)
                         elif elem.is_tail:
-                            parent.insert(parent.getparent().index(parent), newElem)
+                            superparent = parent.getparent();
+                            superparent.insert(superparent.index(parent)+1, newElem)
                             parent.tail = nodetext
+                        else:
+                            print("neither tail nor text")
                     
                 # container.parsed(name).xpath("bingusbingusbingus");
                 container.dirty(name)
